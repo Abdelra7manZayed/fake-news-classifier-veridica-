@@ -19,7 +19,7 @@ is structured so a heavier saved model (Keras `.keras` file or a
 >
 > ## 📰 مصنّف الأخبار الكاذبة — عربي/إنجليزي
 >
-> تطبيق Streamlit واحد يدمج مشروعين (نوتبوكين) في أداة واحدة لكشف الأخبار
+> تطبيق Streamlit واحد يدمج مشروعين في أداة واحدة لكشف الأخبار
 > الكاذبة بالعربية والإنجليزية: المشروع الإنجليزي (`nlp-mini-en-final.ipynb`
 > على بيانات WELFake) والمشروع العربي
 > (`nlp-arabic-fake-news-classification.ipynb`). كلا المشروعين جرّبا عدة
