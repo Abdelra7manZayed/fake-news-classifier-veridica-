@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Trained model artifacts (regenerate with train.py or the Train tab)
+models/*.joblib
+models/*.json
+!models/.gitkeep
+
+# Datasets (do not commit raw data)
+data/*.csv
+!data/sample_texts.json
+
+# NLTK downloaded data
+nltk_data/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
