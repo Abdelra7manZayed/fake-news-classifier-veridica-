@@ -1,128 +1,254 @@
-# 📰 Fake News Classifier — English + Arabic
+<div align="center">
 
-A single Streamlit app that merges two separate notebooks/projects into one
-bilingual fake-news detector:
+# Veridica
 
-- **English** — `notebooks/nlp-mini-en-final.ipynb` (WELFake dataset)
-- **Arabic** — `notebooks/nlp-arabic-fake-news-classification.ipynb` (Arabic fake-news dataset)
+**Dual-language fake news detection · English & Arabic**
 
-Both notebooks experimented with several models (Logistic Regression,
-XGBoost, Random Forest, LSTM / BiLSTM / CNN-LSTM / CNN-BiLSTM, and
-transformers such as DistilBERT / AraBERT / AraBERTv2). The app deploys
-**TF-IDF + Logistic Regression** for both languages — a strong baseline in
-both notebooks that trains in seconds on a CPU and ships as a tiny file,
-which is what makes a live, retrainable Streamlit demo practical. The code
-is structured so a heavier saved model (Keras `.keras` file or a
-`transformers` checkpoint) can be swapped in later — see `src/model.py`.
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.32+-FF4B4B?style=flat&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15+-FF6F00?style=flat&logo=tensorflow&logoColor=white)](https://tensorflow.org)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat)](LICENSE)
 
-> والنسخة العربية 👇
->
-> ## 📰 مصنّف الأخبار الكاذبة — عربي/إنجليزي
->
-> تطبيق Streamlit واحد يدمج مشروعين في أداة واحدة لكشف الأخبار
-> الكاذبة بالعربية والإنجليزية: المشروع الإنجليزي (`nlp-mini-en-final.ipynb`
-> على بيانات WELFake) والمشروع العربي
-> (`nlp-arabic-fake-news-classification.ipynb`). كلا المشروعين جرّبا عدة
-> نماذج (Logistic Regression، XGBoost، LSTM/BiLSTM/CNN، ونماذج
-> Transformer مثل BERT/AraBERT)، والتطبيق هنا يستخدم **TF-IDF + Logistic
-> Regression** لكلتا اللغتين لأنه نموذج قوي وسريع التدريب (بدون GPU) وحجمه
-> صغير جدًا، ما يجعل تطبيقًا تفاعليًا وقابلًا لإعادة التدريب أمرًا عمليًا.
+Nine model architectures compared across two languages —  
+from TF-IDF baselines to fine-tuned DistilBERT and AraBERTv2.
 
-## Project structure
+[**Live Demo**](https://share.streamlit.io) · [**Notebook**](notebooks/nlp-fake-news-final.ipynb) · [**LinkedIn**](https://www.linkedin.com/in/abdelrahman-gamal-zayed/)
+
+</div>
+
+---
+
+## Overview
+
+Veridica is an end-to-end fake news detection system that:
+
+- Trains and evaluates **9 NLP architectures** side-by-side
+- Supports **English** (WELFake, ~72k articles) and **Arabic** (Arabic Fake News dataset, ~100k articles)
+- Deploys as an interactive **Streamlit web app** with a live article scanner
+- Uses real trained models for inference — with an LLM fallback when models are not present
+
+| Language | Best Model | Accuracy | F1-Score |
+|----------|-----------|----------|----------|
+| English  | DistilBERT | 97.87% | 97.61% |
+| English  | Logistic Regression | 96.16% | 95.74% |
+| English  | BiLSTM | 95.81% | 95.41% |
+| English  | XGBoost | 95.78% | 95.36% |
+| English  | CNN-LSTM | 94.49% | 93.92% |
+| Arabic   | AraBERTv2 | 85.27% | 85.75% |
+| Arabic   | Random Forest | 80.90% | 81.35% |
+| Arabic   | BiLSTM | 78.69% | 78.99% |
+| Arabic   | Logistic Regression | 78.06% | 78.10% |
+| Arabic   | CNN-LSTM | 76.27% | 77.35% |
+
+---
+
+## Architecture
 
 ```
-fake-news-classifier/
-├── app.py                  # Streamlit app (Predict / Train / About tabs)
-├── train.py                # CLI trainer (train from a CSV without the UI)
-├── requirements.txt
-├── src/
-│   ├── preprocessing.py    # English + Arabic cleaning pipelines
-│   └── model.py            # Training, persistence, prediction
-├── models/                 # Trained artifacts land here (git-ignored)
-├── data/
-│   └── sample_texts.json   # A few example headlines for manual testing
-├── notebooks/              # The two original source notebooks
-└── .streamlit/config.toml  # Theming
+Input Text
+    │
+    ▼
+Language Detection (Arabic Unicode heuristic)
+    │
+    ├── English ──► Lemmatization + Stopword Removal
+    │                       │
+    │           ┌───────────┴───────────┐
+    │           ▼                       ▼
+    │      TF-IDF Features       Sequence Tokens (25k vocab)
+    │      LR / XGBoost          BiLSTM / CNN-LSTM
+    │
+    └── Arabic ───► Unicode Normalization + Diacritic Removal
+                            │
+                ┌───────────┴───────────┐
+                ▼                       ▼
+           TF-IDF Features       Sequence Tokens
+           LR / Random Forest    BiLSTM / CNN-LSTM
+    │
+    ▼
+Ensemble Average → Threshold (0.65 / 0.35) → REAL / FAKE / UNCERTAIN
 ```
 
-## Quick start
+---
+
+## Project Structure
+
+```
+veridica/
+│
+├── app.py                    # Streamlit application (single file)
+├── imgs_b64.py               # Notebook charts embedded as base64
+├── NOTEBOOK_SAVE_CODE.py     # Code to add to Kaggle notebook to save models
+├── requirements.txt          # Python dependencies
+│
+├── notebooks/
+│   └── nlp-fake-news-final.ipynb   # Training notebook
+│
+├── assets/                   # Raw chart images from notebook output
+│   ├── label_dist.png
+│   ├── wordcloud.png
+│   ├── roc_curve.png
+│   └── ...
+│
+├── models/                   # ← Put your model files here (git-ignored)
+│   └── .gitkeep              # Placeholder — see "Getting the Models" below
+│
+└── .streamlit/
+    ├── config.toml           # Dark theme settings
+    └── secrets.toml.example  # Copy → secrets.toml, add your API key
+```
+
+---
+
+## Quick Start
+
+### 1. Clone the repo
 
 ```bash
-git clone <this-repo-url>
-cd fake-news-classifier
-python -m venv .venv && source .venv/bin/activate   # optional but recommended
+git clone https://github.com/TensorSquad/veridica.git
+cd veridica
+```
+
+### 2. Create a virtual environment
+
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Mac / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
+
+> **Minimal install** (no TensorFlow, classical models only):
+> ```bash
+> pip install streamlit plotly anthropic joblib scikit-learn xgboost nltk
+> ```
+
+### 4. Download NLTK data
+
+```bash
+python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet')"
+```
+
+### 5. Get the models
+
+See **Getting the Models** below, then place files in `models/`.
+
+### 6. Run
+
+```bash
 streamlit run app.py
 ```
 
-The app opens with **no trained model** (model artifacts are not committed
-to the repo — see below). You have two options:
+Open **http://localhost:8501**
 
-### Option A — train from inside the app (easiest)
+The nav bar shows **LOCAL MODELS** when real inference is active.
 
-1. Open the **🛠️ Train** tab.
-2. Choose the language, upload the matching dataset CSV
-   (e.g. `WELFake_Dataset.csv` for English, or your Arabic fake-news CSV).
-3. Pick the text / title / label columns and click **Train**.
-4. Switch to **🔍 Predict** and start testing.
+---
 
-Training happens in-process (TF-IDF + Logistic Regression), so it typically
-finishes in well under a minute even on ~50k rows, with no GPU required.
+## Getting the Models
 
-### Option B — train from the command line
+The trained model files are not tracked by git (too large).
+You have two options:
 
-```bash
-# English (WELFake-style columns: title, text, label)
-python train.py --lang en --csv WELFake_Dataset.csv \
-    --text-col text --title-col title --label-col label
+### Option A — Re-run the notebook (recommended)
 
-# Arabic
-python train.py --lang ar --csv arabic_fake_news_processed.csv \
-    --text-col Article_content --label-col label
-```
+1. Open `notebooks/nlp-fake-news-final.ipynb` on [Kaggle](https://kaggle.com)
+2. Run all cells
+3. Add a new cell at the end with the code from `NOTEBOOK_SAVE_CODE.py`
+4. Run it — models save to `/kaggle/working/models/`
+5. Download from **Kaggle → Output tab**
+6. Place all files in your local `models/` folder
 
-This writes `models/en_*.joblib` / `models/ar_*.joblib`, which `app.py`
-picks up automatically on the next run.
+### Option B — Download from releases
 
-## Why datasets and trained models aren't in this repo
+Pre-trained classical models (LR, XGBoost, TF-IDF) are available in [GitHub Releases](https://github.com/TensorSquad/veridica/releases).
+Download `models-classical.zip`, extract into `models/`.
 
-The original datasets (WELFake, Arabic fake-news) were loaded from Kaggle
-(`/kaggle/input/...`) inside the notebooks and are not redistributed here
-for size/licensing reasons. `.gitignore` also excludes trained model
-artifacts, since they're a byproduct you regenerate locally in seconds
-rather than binary files that belong in version control. If you want a
-"just works, no training step" deployment, train once locally/on Kaggle and
-either commit the resulting `models/*.joblib` files to a private repo or
-attach them as a release asset.
+### Expected files in `models/`
 
-## Deploying
+| File | Size (approx) |
+|------|--------------|
+| `tfidf_english.pkl` | ~25 MB |
+| `lr_english.pkl` | ~1 MB |
+| `xgb_english.pkl` | ~5 MB |
+| `tfidf_arabic.pkl` | ~20 MB |
+| `lr_arabic.pkl` | ~1 MB |
+| `rf_arabic.pkl` | ~15 MB |
+| `tokenizer_en.pkl` | ~2 MB |
+| `tokenizer_ar.pkl` | ~2 MB |
+| `bilstm_en.keras` | ~25 MB |
+| `cnn_en.keras` | ~30 MB |
+| `bilstm_ar.keras` | ~25 MB |
+| `cnn_ar.keras` | ~30 MB |
 
-The app is a standard Streamlit app, so it deploys as-is to
-[Streamlit Community Cloud](https://streamlit.io/cloud) (point it at
-`app.py`), or any container platform: `Dockerfile` example —
+---
 
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8501
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
-```
+## Deploy
 
-## Pushing this repo to GitHub
+### Streamlit Community Cloud (free, recommended)
 
-```bash
-cd fake-news-classifier
-git init
-git add .
-git commit -m "Merge English + Arabic fake news projects into one Streamlit app"
-git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin main
-```
+1. Push this repo to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**
+3. Select repo → `app.py`
+4. **Advanced settings → Secrets**, paste:
+   ```toml
+   ANTHROPIC_API_KEY = "sk-ant-..."
+   ```
+5. Deploy — live in ~60 seconds
+
+> ⚠️ Streamlit Cloud has a 1 GB app limit.
+> Push only the 6 classical `.pkl` files (≈70 MB total).
+> The Keras models (~120 MB total) can also be pushed if under the limit.
+> Do NOT push DistilBERT or AraBERTv2 weights.
+
+### Hugging Face Spaces (alternative)
+
+1. Create a new Space at [huggingface.co/new-space](https://huggingface.co/new-space)
+2. SDK: **Streamlit**
+3. Upload all files
+4. Add `ANTHROPIC_API_KEY` under **Settings → Variables and secrets**
+
+---
+
+## Datasets
+
+| Dataset | Language | Size | Source |
+|---------|----------|------|--------|
+| WELFake | English | ~72k articles | [Kaggle](https://www.kaggle.com/datasets/saurabhshahane/fake-news-classification) |
+| Arabic Fake News | Arabic | ~100k articles | [Kaggle](https://www.kaggle.com/datasets/mtwalaa/arabic-fake-news-dataset) |
+
+---
+
+## Tech Stack
+
+| Layer | Tools |
+|-------|-------|
+| Data & Training | Pandas, NumPy, Scikit-learn, XGBoost, TensorFlow/Keras |
+| Transformers | HuggingFace Transformers (DistilBERT, AraBERTv2) |
+| NLP Preprocessing | NLTK (EN), Unicode normalization (AR) |
+| Web App | Streamlit, Plotly |
+| LLM Fallback | Anthropic Claude API |
+
+---
+
+## Author
+
+**Abdelrahman Gamal Zayed**  
+AI Engineering Student  
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://www.linkedin.com/in/abdelrahman-gamal-zayed/)
+[![GitHub](https://img.shields.io/badge/GitHub-TensorSquad-181717?style=flat&logo=github)](https://github.com/TensorSquad)
+
+---
 
 ## License
 
-MIT — see `LICENSE`.
+MIT License — see [LICENSE](LICENSE) for details.

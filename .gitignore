@@ -1,26 +1,90 @@
-# Python
-__pycache__/
-*.pyc
-.venv/
+# ── VIRTUAL ENVIRONMENTS ──────────────────────────────────────────────────────
 venv/
-*.egg-info/
+.venv/
+env/
+.env/
+ENV/
+venv.bak/
+.conda/
 
-# Trained model artifacts (regenerate with train.py or the Train tab)
-models/*.joblib
-models/*.json
+# ── MODELS (large binary files — add manually after download) ────────────────
+models/*.pkl
+models/*.keras
+models/*.h5
+models/*.pt
+models/*.pth
+models/*.bin
+models/*.onnx
+
+# Keep the models/ folder itself in git
 !models/.gitkeep
 
-# Datasets (do not commit raw data)
-data/*.csv
-!data/sample_texts.json
-
-# NLTK downloaded data
-nltk_data/
-
-# Streamlit
+# ── SECRETS — NEVER COMMIT YOUR API KEY ──────────────────────────────────────
 .streamlit/secrets.toml
+.env
+*.env
+.env.local
+.env.production
 
-# OS / editor
+# ── PYTHON ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+MANIFEST
+
+# ── JUPYTER ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# ── NLTK / ML DATA ────────────────────────────────────────────────────────────
+nltk_data/
+*.vocab
+*.index
+
+# ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
-.idea/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── EDITORS ───────────────────────────────────────────────────────────────────
 .vscode/
+.idea/
+*.swp
+*.swo
+*.kate-swp
+.project
+.pydevproject
+
+# ── LOGS / TEMP ───────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+logs/
+tmp/
+
+# ── STREAMLIT CACHE ───────────────────────────────────────────────────────────
+.streamlit/cache/
+
+# ── KAGGLE ────────────────────────────────────────────────────────────────────
+kaggle.json
